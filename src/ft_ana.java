@@ -6,6 +6,7 @@ import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
 import org.jlab.groot.data.TDirectory;
 import org.jlab.groot.graphics.EmbeddedCanvas;
+import org.jlab.groot.math.F1D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -46,6 +47,7 @@ public class ft_ana {
 	public H2F H_FD_pos_mass_mom, H_FD_neg_mass_mom, H_FD_neutral_mass_mom;
 	public H2F H_FD_pos_mass_the, H_FD_neg_mass_the, H_FD_neutral_mass_the;
 	public H2F H_FD_pos_mass_phi, H_FD_neg_mass_phi, H_FD_neutral_mass_phi;
+	public F1D F_prot_beta_mom, F_kp_beta_mom, F_pip_beta_mom; 
 //	public H2F[] H_FD_pos_mass_mom_pad1b, H_FD_pos_mass_the_pad1b, H_FD_neg_mass_mom_pad1b, H_FD_neg_mass_the_pad1b;
 	
 	
@@ -56,7 +58,19 @@ public class ft_ana {
 		
 		VB = new LorentzVector(0, 0, Eb, Eb);
 		VT = new LorentzVector(0, 0, 0, Mp);
-
+		
+		// theoretical 1D functions for prot, kaon and pion
+		
+		F_prot_beta_mom = new F1D("F_prot_beta_mom", "x/sqrt(0.93827*0.93827+x*x)", 0.3, 5.0);
+		F_prot_beta_mom.setLineWidth(2);
+		F_prot_beta_mom.setLineColor(2);
+		F_kp_beta_mom = new F1D("F_kp_beta_mom", "x/sqrt(0.49367*0.49367+x*x)", 0.3, 5.0);
+		F_kp_beta_mom.setLineColor(2);
+		F_kp_beta_mom.setLineWidth(2);
+		F_pip_beta_mom = new F1D("F_pip_beta_mom", "x/sqrt(0.13957*0.13957+x*x)", 0.3, 5.0);
+		F_pip_beta_mom.setLineColor(2);
+		F_pip_beta_mom.setLineWidth(2);
+		
 		H_FT_e_t_f = new H2F("H_FT_e_t_f", "H_FT_e_t_f", 100, -180, 180, 50, 0, 8);
 		H_FT_e_t_f.setTitle("electron #theta vs #phi");
 		H_FT_e_t_f.setTitleX("#phi (^o)");
@@ -222,6 +236,7 @@ public class ft_ana {
 		
 	}
 	
+	
 	public void fillRecBank(DataBank recBank) {
 		STT = recBank.getFloat("startTime", 0);
 		//RFT = recBank.getFloat("RFTime", 0);
@@ -299,12 +314,10 @@ public class ft_ana {
 			int status = bank.getShort("status", k);
 			boolean inFT = (status >= 1000 && status < 2000);
 			e_mom = (float) Math.sqrt(px * px + py * py + pz * pz);
-			e_the = (float) Math.toDegrees(Math.acos(pz / e_mom));
-			//e_vz = bank.getFloat("vz", k);
 			if (pid == 11 && q == -1 && inFT && e_mom > 1.0 ) NFTElec++;
 			
 			if (NFTElec == 1) {
-				
+				e_the = (float) Math.toDegrees(Math.acos(pz / e_mom));
 				e_phi = (float) Math.toDegrees(Math.atan2(py, px));
 				//e_vx = bank.getFloat("vx", k);
 				//e_vy = bank.getFloat("vy", k);
@@ -317,9 +330,10 @@ public class ft_ana {
 				e_W = (float) Math.sqrt(Mp * Mp + e_Q2 * (1f / e_xB - 1f));
 				return k;
 				
-			}	
-			
+			}
 		}
+			
+		
 		return -1;
 	}
 	
@@ -336,6 +350,7 @@ public class ft_ana {
 			float vy = recbank.getFloat("vy", k);
 			float vz = recbank.getFloat("vz", k);
 			float be = recbank.getFloat("beta", k);
+			float chi2pid = recFTbank.getFloat("chi2pid", k);
 			float ftbbe = recFTbank.getFloat("beta", k);
 			int status = recbank.getShort("status", k);
 			boolean inDC = (status >= 2000 && status < 4000);
@@ -369,20 +384,20 @@ public class ft_ana {
 				
 			}
 			
-			if ( q > 0 && inDC) {
+			if ( q > 0 && inDC && Math.abs(chi2pid) < 5.0) {
 				H_FD_pos_beta_mom.fill(mom, ftbbe);
 				H_FD_pos_mass_mom.fill(mom, TOFmass);
 				H_FD_pos_mass_the.fill(the, TOFmass);
 				H_FD_pos_mass_phi.fill(phi, TOFmass);
 			}
-			if ( q < 0 && inDC) {
+			if ( q < 0 && inDC && Math.abs(chi2pid) < 5.0) {
 				H_FD_neg_beta_mom.fill(mom, ftbbe);
 				H_FD_neg_mass_mom.fill(mom, TOFmass);
 				H_FD_neg_mass_the.fill(the, TOFmass);
 				H_FD_neg_mass_phi.fill(phi, TOFmass);
 
 			}
-			if (q == 0 && inDC ) {
+			if (q == 0 && inDC && Math.abs(chi2pid) < 5.0) {
 				H_FD_neutral_beta_mom.fill(mom, ftbbe);
 				H_FD_neutral_mass_mom.fill(mom, TOFmass);
 				H_FD_neutral_mass_the.fill(the, TOFmass);
@@ -506,9 +521,15 @@ public class ft_ana {
 		can_bevsp_overview.setAxisFontSize(24);
 		can_bevsp_overview.setTitleSize(24);
 		can_bevsp_overview.cd(0);
-		can_bevsp_overview.draw(H_FD_pos_beta_mom);
+		can_bevsp_overview.draw(H_FD_pos_beta_mom);	
+		can_bevsp_overview.draw(F_prot_beta_mom, "same");
+		can_bevsp_overview.draw(F_kp_beta_mom, "same");
+		can_bevsp_overview.draw(F_pip_beta_mom, "same");
 		can_bevsp_overview.cd(1);
 		can_bevsp_overview.draw(H_FD_neg_beta_mom);
+		can_bevsp_overview.draw(F_prot_beta_mom, "same");
+		can_bevsp_overview.draw(F_kp_beta_mom, "same");
+		can_bevsp_overview.draw(F_pip_beta_mom, "same");
 		can_bevsp_overview.cd(2);
 		can_bevsp_overview.draw(H_FD_neutral_beta_mom);
 		H1F H_FD_pos_mass_mom_projY = H_FD_pos_mass_mom.projectionY();
@@ -622,7 +643,7 @@ public class ft_ana {
 		System.setProperty("java.awt.headless", "true");
 		GStyle.setPalette("kRainBow");
 		int count = 0;
-		int maxevents = 50000;
+		int maxevents = 5000000;
 		ft_ana ana = new ft_ana();
 		File fileIn = new File(args[0]);
 		java.util.Date date1 = new java.util.Date();
