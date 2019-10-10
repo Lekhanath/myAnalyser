@@ -1,6 +1,9 @@
 import java.io.*;
+import java.util.*;
+//import java.util.ArrayList;
 
 import org.jlab.clas.physics.LorentzVector;
+import org.jlab.clas.physics.Particle;
 import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
@@ -23,7 +26,7 @@ public class ft_ana {
 	public float STT, RFT, FTSTT;
 	
 	
-	public LorentzVector VB, VT, Ve, VGS, Vprot, Vpip;
+	public LorentzVector VB, VT, Ve, VGS, Vprot, Vpip, Vpim, Vkp, Vkm;
 	public boolean found_eFT;
 	public int e_ft_part_ind;
 	
@@ -36,11 +39,20 @@ public class ft_ana {
 	public int pip_part_ind, pip_FTOF_pad1b;
 	public float pip_mom, pip_the, pip_phi, pip_vx, pip_vy, pip_vz, pip_ftb_beta, pip_FTOF1b_t, pip_FTOF1b_path, pip_FTOF1b_vt;
 	
+	public int pim_part_ind, pim_FTOF_pad1b;
+	public float pim_mom, pim_the, pim_phi, pim_vx, pim_vy, pim_vz, pim_ftb_beta, pim_FTOF1b_t, pim_FTOF1b_path, pim_FTOF1b_vt;
+	
+	public int kp_part_ind, kp_FTOF_pad1b;
+	public float kp_mom, kp_the, kp_phi, kp_vx, kp_vy, kp_vz, kp_ftb_beta, kp_FTOF1b_t, kp_FTOF1b_path, kp_FTOF1b_vt;
+	
+	public int km_part_ind, km_FTOF_pad1b;
+	public float km_mom, km_the, km_phi, km_vx, km_vy, km_vz, km_ftb_beta, km_FTOF1b_t, km_FTOF1b_path, km_FTOF1b_vt;
+	
 	public H1F H_FT_W;
 	public H2F H_FT_e_beta_mom;
 	public H2F H_FT_e_t_f, H_FT_e_p_f, H_FT_e_p_the;
 	public H2F H_FT_W_Q2, H_FT_e_xB_Q2;
-	public H2F H_pip_vt_p, H_prot_vt_p;
+	public H2F H_pip_vt_p, H_prot_vt_p, H_pim_vt_p, H_kp_vt_p, H_km_vt_p;
 	public H2F[] H_FTOF_pos_beta_mom_pad1a, H_FTOF_neg_beta_mom_pad1a, H_FTOF_pos_beta_mom_pad1b, H_FTOF_neg_beta_mom_pad1b;
 	public H2F[] H_FTOF_pos_mass_mom_pad1a, H_FTOF_pos_mass_the_pad1a, H_FTOF_neg_mass_mom_pad1a, H_FTOF_neg_mass_the_pad1a;
 	public H2F[] H_FTOF_pos_mass_mom_pad1b, H_FTOF_pos_mass_the_pad1b, H_FTOF_neg_mass_mom_pad1b, H_FTOF_neg_mass_the_pad1b;
@@ -108,6 +120,18 @@ public class ft_ana {
 		H_pip_vt_p.setTitle("pip vt vs mom");
 		H_pip_vt_p.setTitleX("vt (ns)");
 		H_pip_vt_p.setTitleY("p (GeV)");
+		H_pim_vt_p = new H2F("H_pim_vt_p","H_pim_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_pim_vt_p.setTitle("pim vt vs mom");
+		H_pim_vt_p.setTitleX("vt (ns)");
+		H_pim_vt_p.setTitleY("p (GeV)");
+		H_kp_vt_p = new H2F("H_kp_vt_p","H_kp_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_kp_vt_p.setTitle("kp vt vs mom");
+		H_kp_vt_p.setTitleX("vt (ns)");
+		H_kp_vt_p.setTitleY("p (GeV)");
+		H_km_vt_p = new H2F("H_km_vt_p","H_km_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_km_vt_p.setTitle("km vt vs mom");
+		H_km_vt_p.setTitleX("vt (ns)");
+		H_km_vt_p.setTitleY("p (GeV)");
 		H_prot_vt_p = new H2F("H_prot_vt_p","H_prot_vt_p", 100, -4, 4, 100, 0, 10.6);
 		H_prot_vt_p.setTitle("prot vt vs mom");
 		H_prot_vt_p.setTitleX("vt (ns)");
@@ -268,7 +292,35 @@ public class ft_ana {
 					float pip_beta = pip_mom / (float) Math.sqrt(pip_mom * pip_mom + 0.13957f * 0.13957f);
 					pip_FTOF1b_vt = pip_FTOF1b_t - pip_FTOF1b_path / (pip_beta * 29.98f) - STT - pip_vz/29.98f;
 					H_pip_vt_p.fill(pip_FTOF1b_vt, pip_mom);
-				} // pip from FTOF panal 1b 
+				} // pip from FTOF panal 1b
+				
+				if (bank.getShort("pindex", r) == pim_part_ind && bank.getByte("layer", r) == 2) {
+					pim_FTOF_pad1b = bank.getShort("component", r);
+					pim_FTOF1b_t = bank.getFloat("time", r);
+					pim_FTOF1b_path = bank.getFloat("path", r);
+					float pim_beta = pim_mom / (float) Math.sqrt(pim_mom * pim_mom + 0.13957f * 0.13957f);
+					pim_FTOF1b_vt = pim_FTOF1b_t - pim_FTOF1b_path / (pim_beta * 29.98f) - STT - pim_vz/29.98f;
+					H_pim_vt_p.fill(pim_FTOF1b_vt, pim_mom);
+				} // pim from FTOF panal 1b
+				
+				if (bank.getShort("pindex", r) == kp_part_ind && bank.getByte("layer", r) == 2) {
+					kp_FTOF_pad1b = bank.getShort("component", r);
+					kp_FTOF1b_t = bank.getFloat("time", r);
+					kp_FTOF1b_path = bank.getFloat("path", r);
+					float kp_beta = kp_mom / (float) Math.sqrt(kp_mom * kp_mom + 0.13957f * 0.13957f);
+					kp_FTOF1b_vt = kp_FTOF1b_t - kp_FTOF1b_path / (kp_beta * 29.98f) - STT - kp_vz/29.98f;
+					H_kp_vt_p.fill(kp_FTOF1b_vt, kp_mom);
+				} // kp from FTOF panal 1b
+				
+				if (bank.getShort("pindex", r) == km_part_ind && bank.getByte("layer", r) == 2) {
+					km_FTOF_pad1b = bank.getShort("component", r);
+					km_FTOF1b_t = bank.getFloat("time", r);
+					km_FTOF1b_path = bank.getFloat("path", r);
+					float km_beta = km_mom / (float) Math.sqrt(km_mom * km_mom + 0.13957f * 0.13957f);
+					km_FTOF1b_vt = km_FTOF1b_t - km_FTOF1b_path / (km_beta * 29.98f) - STT - km_vz/29.98f;
+					H_km_vt_p.fill(km_FTOF1b_vt, km_mom);
+				} // km from FTOF panal 1b
+				
 				
 				if (bank.getShort("pindex", r) == prot_part_ind && bank.getByte("layer", r) == 2) {
 					prot_FTOF_pad1b = bank.getShort("component", r);
@@ -357,7 +409,11 @@ public class ft_ana {
 	}
 	
 	public void makeOthers(DataBank recbank,  DataBank recFTbank) {
-		
+		List<LorentzVector> pips = new ArrayList<LorentzVector>();
+		List<LorentzVector> pims = new ArrayList<LorentzVector>();
+		List<LorentzVector> prots = new ArrayList<LorentzVector>();
+		List<LorentzVector> kps = new ArrayList<LorentzVector>();
+		List<LorentzVector> kms = new ArrayList<LorentzVector>();
 		for (int k = 0; k < recbank.rows(); k++) {
 			byte q = recbank.getByte("charge", k);
 			int pid = recbank.getInt("pid", k);
@@ -387,18 +443,52 @@ public class ft_ana {
 				pip_vz = vz;
 				pip_ftb_beta = ftbbe;
 				Vpip = new LorentzVector(px, py, pz, Math.sqrt(pip_mom * pip_mom + 0.13957f * 0.13957f));
+				pips.add(Vpip);
+
+			}
+			if (ftbpid == -211 && pim_part_ind == -1 && inDC && mom > 1.5 ) {
+				pim_part_ind = k;
+				pim_mom = mom;
+				pim_the = the;
+				pim_phi = (float) Math.toDegrees(Math.atan2(py, px));
+				pim_vx = vx;
+				pim_vy = vy;
+				pim_vz = vz;
+				pim_ftb_beta = ftbbe;
+				Vpim = new LorentzVector(px, py, pz, Math.sqrt(pim_mom * pim_mom + 0.13957f * 0.13957f));
+				pims.add(Vpim);
+
+			}
+			if (ftbpid == 321 && kp_part_ind == -1 && inDC && mom > 1.5 ) {
+				kp_part_ind = k;
+				kp_mom = mom;
+				kp_the = the;
+				kp_phi = (float) Math.toDegrees(Math.atan2(py, px));
+				kp_vx = vx;
+				kp_vy = vy;
+				kp_vz = vz;
+				kp_ftb_beta = ftbbe;
+				Vkp = new LorentzVector(px, py, pz, Math.sqrt(kp_mom * kp_mom + 0.13957f * 0.13957f));
+				kps.add(Vkp);
 
 			}
 			
-			/*
-			 * if (ftbpid == 211 && pip_part_ind == -1 && inDC && mom > 1.5 ) { pip_part_ind
-			 * = k; pip_mom = mom; pip_the = the; pip_phi = (float)
-			 * Math.toDegrees(Math.atan2(py, px)); pip_vx = vx; pip_vy = vy; pip_vz = vz;
-			 * pip_ftb_beta = ftbbe; Vpip = new LorentzVector(px, py, pz, Math.sqrt(pip_mom
-			 * * pip_mom + 0.13957f * 0.13957f));
-			 * 
-			 * }
-			 */
+			if (ftbpid == -321 && km_part_ind == -1 && inDC && mom > 1.5 ) {
+				km_part_ind = k;
+				km_mom = mom;
+				km_the = the;
+				km_phi = (float) Math.toDegrees(Math.atan2(py, px));
+				km_vx = vx;
+				km_vy = vy;
+				km_vz = vz;
+				km_ftb_beta = ftbbe;
+				Vkm = new LorentzVector(px, py, pz, Math.sqrt(km_mom * km_mom + 0.13957f * 0.13957f));
+				kms.add(Vkm);
+
+			}
+			
+			  
+			 
 			
 			if (ftbpid == 2212 && prot_part_ind == -1 && inDC && mom > 1.5) {
 				prot_part_ind = k;
@@ -410,6 +500,8 @@ public class ft_ana {
 				prot_vz = vz;
 				prot_ftb_beta = ftbbe;
 				Vprot = new LorentzVector(px, py, pz, Math.sqrt(prot_mom * prot_mom + 0.93827f * 0.93827f));
+				prots.add(Vprot);
+				//Particle recParticle = new Particle(ftbpid, px, py, pz, vx, vy, vz);
 				
 			}
 			
@@ -434,12 +526,17 @@ public class ft_ana {
 			}
 			
 		} // FOR LOOP
+		
+		//System.out.println("found :: " + prots.size() + " protons tracks");	
 	
 	} //MAKEOTHER
 	
 	public void resetCounters() {
 		e_ft_part_ind = -1;
 		pip_part_ind = -1;
+		pim_part_ind = -1;
+		kp_part_ind = -1;
+		km_part_ind = -1;
 		prot_part_ind = -1;
 		pip_FTOF_pad1b = -1;
 		found_eFT = false;
@@ -454,8 +551,6 @@ public class ft_ana {
 		resetCounters();
 		if (event.hasBank("RECFT::Event"))
 			fillRecBank(event.getBank("RECFT::Event"));
-//		if (event.hasBank("REC::Event"))
-//			fillRecBank(event.getBank("REC::Event"));
 		if (event.hasBank("REC::Particle"))
 			e_ft_part_ind = makeFTElectron(event.getBank("REC::Particle"));
 		if(e_ft_part_ind > -1) {
@@ -548,11 +643,11 @@ public class ft_ana {
 		System.out.println("saved plots dst_massvsphi_overview.png");
 		
 		EmbeddedCanvas can_bevsp_overview = new EmbeddedCanvas();
-		can_bevsp_overview.setSize(3600, 1800);
+		can_bevsp_overview.setSize(1800, 1200);
 		can_bevsp_overview.divide(3, 2);
-		can_bevsp_overview.setAxisTitleSize(24);
-		can_bevsp_overview.setAxisFontSize(24);
-		can_bevsp_overview.setTitleSize(24);
+		can_bevsp_overview.setAxisTitleSize(18);
+		can_bevsp_overview.setAxisFontSize(18);
+		can_bevsp_overview.setTitleSize(18);
 		can_bevsp_overview.cd(0);
 		can_bevsp_overview.getPad(0).getAxisY().setLog(true);
 		can_bevsp_overview.draw(H_FD_pos_beta_mom);
@@ -590,14 +685,20 @@ public class ft_ana {
 		// for particle momentum vs deltaT overview
 		EmbeddedCanvas can_pvsvt_overview = new EmbeddedCanvas();
 		can_pvsvt_overview.setSize(1800, 1200);
-		can_pvsvt_overview.divide(2, 2);
-		can_pvsvt_overview.setAxisTitleSize(24);
-		can_pvsvt_overview.setAxisFontSize(24);
-		can_pvsvt_overview.setTitleSize(24);
+		can_pvsvt_overview.divide(3, 2);
+		can_pvsvt_overview.setAxisTitleSize(18);
+		can_pvsvt_overview.setAxisFontSize(18);
+		can_pvsvt_overview.setTitleSize(18);
 		can_pvsvt_overview.cd(0);
 		can_pvsvt_overview.draw(H_pip_vt_p);
 		can_pvsvt_overview.cd(1);
 		can_pvsvt_overview.draw(H_prot_vt_p);
+		can_pvsvt_overview.cd(2);
+		can_pvsvt_overview.draw(H_pim_vt_p);
+		can_pvsvt_overview.cd(3);
+		can_pvsvt_overview.draw(H_kp_vt_p);
+		can_pvsvt_overview.cd(4);
+		can_pvsvt_overview.draw(H_km_vt_p);
 		can_pvsvt_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_pvsvt_overview.png"));
 		System.out.println("saved plots dst_pvsvt_overview.png");
 		
