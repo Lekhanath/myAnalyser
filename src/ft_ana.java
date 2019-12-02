@@ -1,13 +1,17 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
 //import java.util.ArrayList;
 import org.jlab.jnp.physics.*;
+
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.clas.physics.LorentzVector;
 import org.jlab.clas.physics.Particle;
 import org.jlab.groot.base.GStyle;
+import org.jlab.groot.data.DataLine;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
 import org.jlab.groot.data.TDirectory;
@@ -56,6 +60,8 @@ public class ft_ana {
 	public float protpim_IM, protrecpim_IM;
 	public F1D F_prot_beta_mom, F_kp_beta_mom, F_pip_beta_mom;
 	
+	public DataLine L_lamda, L_sigma;
+	
 	public H1F H_FT_W;
 	public H1F H_ekp_MM;
 	public H1F H_protpim_IM;
@@ -98,6 +104,16 @@ public class ft_ana {
 		F_pip_beta_mom.setLineColor(2);
 		F_pip_beta_mom.setLineWidth(2);
 		
+		//l1 = new DataLine(1.115683, 0, 1.115683, 800);
+		L_lamda = new DataLine();
+		L_lamda.setOrigin(1.115683, 0);
+		L_lamda.setEnd(1.115683, 700);
+		L_lamda.setLineColor(2);
+		
+		L_sigma = new DataLine();
+		L_sigma.setOrigin(1.18937, 0);
+		L_sigma.setEnd(1.18937, 700);
+		L_sigma.setLineColor(2);
 		// FT electron overview
 		H_FT_e_t_f = new H2F("H_FT_e_t_f", "H_FT_e_t_f", 100, -180, 180, 50, 0, 8);
 		H_FT_e_t_f.setTitle("electron #theta vs #phi");
@@ -484,6 +500,7 @@ public class ft_ana {
 				//e_vy = bank.getFloat("vy", k);
 				//1.015964
 				Ve = new LorentzVector(1.015964*px, 1.015964*py, 1.015964*pz, Math.sqrt(1.015964*e_mom * 1.015964*e_mom + 0.000510998f * 0.000510998f));
+				//Ve = new LorentzVector(px, py, pz, Math.sqrt(e_mom * e_mom + 0.000510998f * 0.000510998f));
 				VGS = new LorentzVector(0, 0, 0, 0);
 				VGS.add(VB);
 				VGS.sub(Ve);
@@ -864,8 +881,8 @@ public class ft_ana {
 		can_ekp_MM_overview.cd(5); //can_ekp_MM_overview.getPad(4).getAxisZ().setLog(true);
 		can_ekp_MM_overview.draw(H_ekp_MM);
 		can_ekp_MM_overview.cd(6);can_ekp_MM_overview.draw(H_ekpprot_MM2);can_ekp_MM_overview.draw(F_ekpport_MM2, "same");
-		can_ekp_MM_overview.cd(7);can_ekp_MM_overview.draw(H_protpim_IM);
-		can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);
+		can_ekp_MM_overview.cd(7);can_ekp_MM_overview.draw(H_protpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
+		can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
 		//can_ekp_MM_overview.cd(5); can_ekp_MM_overview.getPad(5).getAxisZ().setLog(true);
 		//can_ekp_MM_overview.draw(H_prot_vt_p);
 		can_ekp_MM_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_ekpprot_W_overview.png"));
@@ -1074,21 +1091,38 @@ public class ft_ana {
 		System.setProperty("java.awt.headless", "true");
 		GStyle.setPalette("kRainBow");
 		int count = 0;
-		int maxevents = 18512898;
+		int maxevents = 198624;
 		ft_ana ana = new ft_ana();
 		// "/home/akhanal/work/ExPhy/data/rg-a/trains/v16_v2/skim3_5038.hipo"  10.6 GeV run
 		// "/home/akhanal/work/ExPhy/data/rg-k/trains/pass1/v0_2/skim3_5700.hipo" 7.5 GeV run
-		File fileIn = new File(args[0]); 
-		java.util.Date date1 = new java.util.Date();
-		System.out.println(date1);
+		//File fileIn = new File(args[0]); 
+		Date date1 = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        long startTime = System.currentTimeMillis();
+        long previousTime = System.currentTimeMillis();
+		System.out.println(dateFormat.format(date1));
+		System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", args[0]));
+		File fileIn = new File(args[0]);
+        //File varTmpDir = new File(fileIn);
+        //if(!fileIn.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
+        System.out.println("READING NOW "+ fileIn);
 		HipoDataSource reader = new HipoDataSource();
 		reader.open(fileIn);
 		while (reader.hasEvent() && count < maxevents) {
 			DataEvent event = reader.getNextEvent();
 			ana.processEvent(event);
 			count++;
-						
-			
+			if(count%10000 == 0){
+                long nowTime = System.currentTimeMillis();
+                long elapsedTime = nowTime - previousTime;
+                long totalTime = nowTime - startTime;
+                elapsedTime = elapsedTime/1000;
+                totalTime = totalTime/1000;
+                Date date = new Date();
+                String TimeString = "          time : " + dateFormat.format(date) + " , last elapsed : " + elapsedTime + "s ; total elapsed : " + totalTime + "s";
+                System.out.println(TimeString);		
+                previousTime = nowTime;
+			}
 		}
 		
 		System.out.println("Total events : " + count);
