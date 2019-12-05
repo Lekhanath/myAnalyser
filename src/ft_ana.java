@@ -18,6 +18,7 @@ import org.jlab.groot.data.TDirectory;
 import org.jlab.groot.fitter.DataFitter;
 import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.groot.math.F1D;
+import org.jlab.groot.ui.TCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -29,13 +30,14 @@ import org.jlab.io.hipo.HipoDataSource;
 
 public class ft_ana {
 	//public int NFTElec;
-	private float  Eb, Mp;
+	
+	public float  Eb, Mp;
 	//public float EB, Eb, Mp;
-	private float STT, RFT, FTSTT;
+	public float STT, RFT, FTSTT;
 	
 	//public List<LorentzVector> kps; // = new ArrayList<LorentzVector>();
-	private LorentzVector VB, VT, Ve, VGS, Vprot, Vpip, Vpim, Vpim_correct, Vkp, Vkp_correct, Vkm;
-	private boolean found_eFT;
+	public LorentzVector VB, VT, Ve, VGS, Vprot, Vpip, Vpim, Vpim_correct, Vkp, Vkp_correct, Vkm;
+	public boolean found_eFT;
 	public int e_ft_part_ind;
 	
 	public float e_mom, e_the, e_phi;
@@ -86,8 +88,8 @@ public class ft_ana {
 	
 	public ft_ana() {
 	//	NFTElec = 0;
-	//	Eb = 10.6f;
-		Eb = 7.54626f;
+		Eb = 10.6f;
+	//	Eb = 7.54626f;
 		Mp = 0.93827f;
 		
 		VB = new LorentzVector(0, 0, Eb, Eb);
@@ -105,6 +107,8 @@ public class ft_ana {
 		F_pip_beta_mom.setLineWidth(2);
 		
 		//l1 = new DataLine(1.115683, 0, 1.115683, 800);
+		
+		
 		L_lamda = new DataLine();
 		L_lamda.setOrigin(1.115683, 0);
 		L_lamda.setEnd(1.115683, 700);
@@ -171,7 +175,7 @@ public class ft_ana {
 		H_ekpprot_MM2.setTitleX("H_ekpprot_MM2");
 		H_ekpprot_MM2.setTitleY("count");
 		
-		F_ekpport_MM2 = new F1D("F_ekpport_MM2", "[amp]*gaus(x,[mean],[sigma])", -0.08, 0.105);
+		F_ekpport_MM2 = new F1D("F_ekpport_MM2", "[amp]*gaus(x,[mean],[sigma])", -0.04, 0.06);
 		F_ekpport_MM2.setParameter(0, 0.0);
     	F_ekpport_MM2.setParameter(1, 140.0);
     	F_ekpport_MM2.setParameter(2, 0.15);
@@ -181,12 +185,12 @@ public class ft_ana {
     	F_ekpport_MM2.setLineColor(2);
     	F_ekpport_MM2.setOptStat("1111111");
 		
-		H_ekp_MM = new H1F("H_ekp_MM", "H_ekp_MM", 150, 1, 2.5);
+		H_ekp_MM = new H1F("H_ekp_MM", "H_ekp_MM", 150, 0.95, 2.0);
 		H_ekp_MM.setTitle("Missing Mass");
 		H_ekp_MM.setTitleX("MM(ekp) (GeV)");
 		H_ekp_MM.setTitleY("count");
 		
-		H_protpim_IM = new H1F("H_protpim_IM", "H_protpim_IM", 150, 0.95, 2.5);
+		H_protpim_IM = new H1F("H_protpim_IM", "H_protpim_IM", 150, 0.95, 2.0);
 		H_protpim_IM.setTitle("Invarient Mass");
 		H_protpim_IM.setTitleX("M(protpim) (GeV)");
 		H_protpim_IM.setTitleY("count");
@@ -233,31 +237,31 @@ public class ft_ana {
 		H_FD_neutral_beta_mom.setTitle("NEUTRAL  #beta vs mom");
 		H_FD_neutral_beta_mom.setTitleX("p (GeV)");
 		H_FD_neutral_beta_mom.setTitleY("FTB #beta");
-		H_FD_pos_mass_mom = new H2F("H_FD_pos_mass_mom", "H_FD_pos_mass_mom", 100, 0, 5, 150, -0.5, 2);
+		H_FD_pos_mass_mom = new H2F("H_FD_pos_mass_mom", "H_FD_pos_mass_mom", 100, 0, 7, 150, -0.5, 4.5);
 		H_FD_pos_mass_mom.setTitle("POS Mass^2 vs mom");
 		H_FD_pos_mass_mom.setTitleX("p (GeV)");
 		H_FD_pos_mass_mom.setTitleY("M^2 (GeV^2)");
-		H_FD_neg_mass_mom = new H2F("H_FD_neg_mass_mom", "H_FD_neg_mass_mom", 100, 0, 5, 150, -0.5, 2);
+		H_FD_neg_mass_mom = new H2F("H_FD_neg_mass_mom", "H_FD_neg_mass_mom", 100, 0, 7, 150, -0.5, 2.0);
 		H_FD_neg_mass_mom.setTitle("NEG Mass^2 vs mom");
 		H_FD_neg_mass_mom.setTitleX("p (GeV)");
 		H_FD_neg_mass_mom.setTitleY("M^2 (GeV^2)");
-		H_FD_neutral_mass_mom = new H2F("H_FD_neutral_mass_mom", "H_FD_neutral_mass_mom", 100, 0, 5, 150, -0.5, 2);
+		H_FD_neutral_mass_mom = new H2F("H_FD_neutral_mass_mom", "H_FD_neutral_mass_mom", 100, 0, 7, 150, -0.5, 2.0);
 		H_FD_neutral_mass_mom.setTitle("NEUTRAL Mass^2 vs mom");
 		H_FD_neutral_mass_mom.setTitleX("p (GeV)");
 		H_FD_neutral_mass_mom.setTitleY("M^2 (GeV^2)");
-		H_FD_pos_mass_the = new H2F("H_FD_pos_mass_the", "H_FD_pos_mass_the", 100, 0, 45, 100, -0.5, 2);
+		H_FD_pos_mass_the = new H2F("H_FD_pos_mass_the", "H_FD_pos_mass_the", 100, 0, 80, 100, -0.5, 4.5);
 		H_FD_pos_mass_the.setTitle("POS Mass^2 vs #theta");
 		H_FD_pos_mass_the.setTitleX("#theta (^o)");
 		H_FD_pos_mass_the.setTitleY("M^2 (GeV^2");
-		H_FD_neg_mass_the = new H2F("H_FD_neg_mass_the", "H_FD_neg_mass_the", 100, 0, 45, 100, -0.5, 2);
+		H_FD_neg_mass_the = new H2F("H_FD_neg_mass_the", "H_FD_neg_mass_the", 100, 0, 80, 100, -0.5, 2);
 		H_FD_neg_mass_the.setTitle("NEG Mass^2 vs #theta");
 		H_FD_neg_mass_the.setTitleX("#theta (^o)");
 		H_FD_neg_mass_the.setTitleY("M^2 (GeV^2");
-		H_FD_neutral_mass_the = new H2F("H_FD_neutral_mass_the", "H_FD_neutral_mass_the", 100, 0, 45, 100, -0.5, 2);
+		H_FD_neutral_mass_the = new H2F("H_FD_neutral_mass_the", "H_FD_neutral_mass_the", 100, 0, 80, 100, -0.5, 2);
 		H_FD_neutral_mass_the.setTitle("NEUTRAL Mass^2 vs #theta");
 		H_FD_neutral_mass_the.setTitleX("#theta (^o)");
 		H_FD_neutral_mass_the.setTitleY("M^2 (GeV^2");
-		H_FD_pos_mass_phi = new H2F("H_FD_pos_mass_phi", "H_FD_pos_mass_phi", 100, -180, 180, 100, -0.5, 2);
+		H_FD_pos_mass_phi = new H2F("H_FD_pos_mass_phi", "H_FD_pos_mass_phi", 100, -180, 180, 100, -0.5, 4.5);
 		H_FD_pos_mass_phi.setTitle("POS Mass^2 vs #phi");
 		H_FD_pos_mass_phi.setTitleX("#phi (^o)");
 		H_FD_pos_mass_phi.setTitleY("M^2 (GeV^2");
@@ -354,7 +358,6 @@ public class ft_ana {
 		
 		
 	} // end of ft_ana()
-	
 	
 	public void fillRecBank(DataBank recBank) {
 		STT = recBank.getFloat("startTime", 0);
@@ -498,8 +501,9 @@ public class ft_ana {
 				e_phi = (float) Math.toDegrees(Math.atan2(py, px));
 				//e_vx = bank.getFloat("vx", k);
 				//e_vy = bank.getFloat("vy", k);
-				//1.015964
-				Ve = new LorentzVector(1.015964*px, 1.015964*py, 1.015964*pz, Math.sqrt(1.015964*e_mom * 1.015964*e_mom + 0.000510998f * 0.000510998f));
+				//c = 1.015964; 
+				float corrn = (float)1.0165;
+				Ve = new LorentzVector(corrn*px, corrn*py, corrn*pz, Math.sqrt(corrn*e_mom * corrn*e_mom + 0.000510998f * 0.000510998f));
 				//Ve = new LorentzVector(px, py, pz, Math.sqrt(e_mom * e_mom + 0.000510998f * 0.000510998f));
 				VGS = new LorentzVector(0, 0, 0, 0);
 				VGS.add(VB);
@@ -542,9 +546,10 @@ public class ft_ana {
 			float the = (float) Math.toDegrees(Math.acos(pz / mom));
 			float phi = (float) Math.toDegrees(Math.atan2(py, px));
 			double FTBmass = mom * mom * (1 / ( ftbbe * ftbbe ) - 1);
-			boolean kpMass2 = (0.180625 < FTBmass && FTBmass < 0.36);// 0.425 < kpM < 0.6
+			boolean kpMass2Cut = (0.180625 < FTBmass && FTBmass < 0.36);// 0.425 < kpM < 0.6
+			boolean chi2pidCut = (Math.abs(chi2pid) < 5.0);
 			
-			if (ftbpid == 211 && pip_part_ind == -1 && inDC) {
+			if (ftbpid == 211 && pip_part_ind == -1 && inDC && chi2pidCut) {
 				pip_part_ind = k;
 				pip_mom = mom;
 				pip_the = the;
@@ -557,7 +562,7 @@ public class ft_ana {
 //				pips.add(Vpip);
 
 			}
-			if (ftbpid == -211 && pim_part_ind == -1 && inDC) {
+			if (ftbpid == -211 && pim_part_ind == -1 && inDC && chi2pidCut) {
 				pim_part_ind = k;
 				pim_mom = mom;
 				pim_the = the;
@@ -570,7 +575,7 @@ public class ft_ana {
 //				pims.add(Vpim);
 
 			}
-			if (ftbpid == 321 && kp_part_ind == -1 && inDC && kpMass2) {
+			if (ftbpid == 321 && kp_part_ind == -1 && inDC && kpMass2Cut && chi2pidCut) {
 				kp_part_ind = k;
 				kp_mom = mom;
 				kp_the = the;
@@ -587,7 +592,7 @@ public class ft_ana {
 
 			}
 			
-			if (ftbpid == -321 && km_part_ind == -1 && inDC) {
+			if (ftbpid == -321 && km_part_ind == -1 && inDC && chi2pidCut) {
 				km_part_ind = k;
 				km_mom = mom;
 				km_the = the;
@@ -604,7 +609,7 @@ public class ft_ana {
 			  
 			 
 			
-			if (ftbpid == 2212 && prot_part_ind == -1 && inDC) {
+			if (ftbpid == 2212 && prot_part_ind == -1 && inDC && chi2pidCut) {
 				prot_part_ind = k;
 				prot_mom = mom;
 				prot_the = the;
@@ -668,11 +673,7 @@ public class ft_ana {
 			//while(epip_dPhi<-180f)epip_dPhi += 360f;
 			LorentzVector VmissPIM = new LorentzVector(0,0,0,0);
 			LorentzVector Vmissekp = new LorentzVector(0,0,0,0);
-			VmissPIM.add(VT);
-			VmissPIM.add(VB);
-			VmissPIM.sub(Ve);
-			VmissPIM.sub(Vkp);
-			VmissPIM.sub(Vprot);
+			VmissPIM.add(VT);VmissPIM.add(VB);VmissPIM.sub(Ve);VmissPIM.sub(Vkp);VmissPIM.sub(Vprot);
 			Vmissekp.add(VT);Vmissekp.add(VB);Vmissekp.sub(Ve);Vmissekp.sub(Vkp);
 			ekpprot_MM = (float)VmissPIM.mass2();
 			ekpprot_MM_ekp = (float)Vmissekp.mass();
@@ -690,7 +691,7 @@ public class ft_ana {
 			VmissLamda.sub(Ve);
 			VmissLamda.sub(Vkp);
 			
-			if (Math.abs(ekpprot_MM - 0.039) < 0.20 && kp_mom < 2.8) {		
+			if (ekpprot_MM < 0.12 && ekpprot_MM > -0.06) {		
 				ekp_MM = (float)VmissLamda.mass();	
 			}
 			res = true;
@@ -700,24 +701,24 @@ public class ft_ana {
 
 	// invariant mass of corrected electron and reconstructed pim from MM(ekpprot) technique
 	
-	public boolean select_protrecpim() {
-		boolean res = false;
-		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT && Math.abs(ekpprot_MM - 0.035) < 0.20 && kp_mom < 2.8){	
-			LorentzVector V_recpim = new LorentzVector(0,0,0,0);
-			V_recpim.add(VT);V_recpim.add(VB);V_recpim.sub(Ve);V_recpim.sub(Vkp);V_recpim.sub(Vprot);
-			float recpim_mom = (float) Math.sqrt(V_recpim.px() * V_recpim.px() + V_recpim.py() * V_recpim.py() + V_recpim.pz() * V_recpim.pz());
-			LorentzVector V_IM_protrecpim = new LorentzVector(V_recpim.px(), V_recpim.py(), V_recpim.pz(), Math.sqrt(recpim_mom * recpim_mom + 0.13957f * 0.13957f) );
-			//V_IM_protrecpim.add(V_recpim);
-			V_IM_protrecpim.add(Vprot);
-			protrecpim_IM = (float)V_IM_protrecpim.mass();
-			res = true;
-		}
-		return res;
-	}
+//	public boolean select_protrecpim() {
+//		boolean res = false;
+//		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT && Math.abs(ekpprot_MM - 0.01947978) < 0.10 && kp_mom < 2.8){	
+//			LorentzVector V_recpim = new LorentzVector(0,0,0,0);
+//			V_recpim.add(VT);V_recpim.add(VB);V_recpim.sub(Ve);V_recpim.sub(Vkp);V_recpim.sub(Vprot);
+//			float recpim_mom = (float) Math.sqrt(V_recpim.px() * V_recpim.px() + V_recpim.py() * V_recpim.py() + V_recpim.pz() * V_recpim.pz());
+//			LorentzVector V_IM_protrecpim = new LorentzVector(V_recpim.px(), V_recpim.py(), V_recpim.pz(), Math.sqrt(recpim_mom * recpim_mom + 0.13957f * 0.13957f) );
+//			//V_IM_protrecpim.add(V_recpim);
+//			V_IM_protrecpim.add(Vprot);
+//			protrecpim_IM = (float)V_IM_protrecpim.mass();
+//			res = true;
+//		}
+//		return res;
+//	}
 	
 	public boolean select_protpim() {
 		boolean res = false;
-		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT && Math.abs(ekpprot_MM - 0.035) < 0.20 && kp_mom < 2.8) {
+		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT && Math.abs(ekpprot_MM - 0.01947978) < 0.05) {
 			LorentzVector V_recpim = new LorentzVector(0,0,0,0);
 			LorentzVector V_IM_protrecpim = new LorentzVector(0,0,0,0);
 			V_recpim.add(VT);V_recpim.add(VB);V_recpim.sub(Ve);V_recpim.sub(Vkp);V_recpim.sub(Vprot);
@@ -816,10 +817,10 @@ public class ft_ana {
 			H_ekp_MM.fill(ekp_MM);
 		}
 		
-		if (select_protrecpim()) {
-			H_protrecpim_IM.fill(protrecpim_IM);
-		}
-		
+//		if (select_protrecpim()) {
+//			H_protrecpim_IM.fill(protrecpim_IM);
+//		}
+//		
 		
 		if (select_protpim()) {
 			H_protpim_IM.fill(protpim_IM);
@@ -850,6 +851,7 @@ public class ft_ana {
 		can_e_overview.getPad(4).getAxisZ().setLog(true);
 		can_e_overview.draw(H_FT_e_xB_Q2);
 		can_e_overview.cd(5);
+		can_e_overview.cd(5).save("/home/akhanal/eclipse-workspace/myAnalyser/plots/e_overview.png");
 		can_e_overview.draw(H_FT_W);
 		can_e_overview.getPad(5).getAxisZ().setRange(5, 25);
 		can_e_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FT_e_overview.png"));
@@ -877,12 +879,16 @@ public class ft_ana {
 		H_ekpprot_W_e_theta_projX.setTitleY("count");
 		can_ekp_MM_overview.draw(H_ekpprot_W_e_theta_projX);
 		can_ekp_MM_overview.cd(4);
-		can_ekp_MM_overview.draw(H_ekpprot_MMekp_MM2);
+		DataLine UekpprotMM2Cut = new DataLine();UekpprotMM2Cut.setOrigin(0.0, 0.12);UekpprotMM2Cut.setEnd(2.5, 0.12);UekpprotMM2Cut.setLineColor(2);
+		DataLine LekpprotMM2Cut = new DataLine();LekpprotMM2Cut.setOrigin(0.0, -0.06);LekpprotMM2Cut.setEnd(2.5, -0.06);LekpprotMM2Cut.setLineColor(2);
+		can_ekp_MM_overview.draw(H_ekpprot_MMekp_MM2);can_ekp_MM_overview.draw(UekpprotMM2Cut);can_ekp_MM_overview.draw(LekpprotMM2Cut);
 		can_ekp_MM_overview.cd(5); //can_ekp_MM_overview.getPad(4).getAxisZ().setLog(true);
-		can_ekp_MM_overview.draw(H_ekp_MM);
-		can_ekp_MM_overview.cd(6);can_ekp_MM_overview.draw(H_ekpprot_MM2);can_ekp_MM_overview.draw(F_ekpport_MM2, "same");
+		can_ekp_MM_overview.draw(H_ekp_MM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
+		DataLine Lcut = new DataLine();Lcut.setOrigin(-0.04, 0);Lcut.setEnd(-0.04, 200);Lcut.setLineColor(2);
+		DataLine Ucut = new DataLine();Ucut.setOrigin(0.06, 0);Ucut.setEnd(0.06, 200);Ucut.setLineColor(2);
+		can_ekp_MM_overview.cd(6);can_ekp_MM_overview.draw(H_ekpprot_MM2);can_ekp_MM_overview.draw(F_ekpport_MM2, "same");can_ekp_MM_overview.draw(Lcut);can_ekp_MM_overview.draw(Ucut);
 		can_ekp_MM_overview.cd(7);can_ekp_MM_overview.draw(H_protpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
-		can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
+		//can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
 		//can_ekp_MM_overview.cd(5); can_ekp_MM_overview.getPad(5).getAxisZ().setLog(true);
 		//can_ekp_MM_overview.draw(H_prot_vt_p);
 		can_ekp_MM_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_ekpprot_W_overview.png"));
@@ -1091,42 +1097,97 @@ public class ft_ana {
 		System.setProperty("java.awt.headless", "true");
 		GStyle.setPalette("kRainBow");
 		int count = 0;
-		int maxevents = 198624;
+		int maxevents = 5000000;
 		ft_ana ana = new ft_ana();
 		// "/home/akhanal/work/ExPhy/data/rg-a/trains/v16_v2/skim3_5038.hipo"  10.6 GeV run
 		// "/home/akhanal/work/ExPhy/data/rg-k/trains/pass1/v0_2/skim3_5700.hipo" 7.5 GeV run
 		//File fileIn = new File(args[0]); 
 		Date date1 = new Date();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", args[0]));
+		String filelist = "list_of_files.txt";
+		filelist = args[0];
+		List<String> toProcessFileNames = new ArrayList<String>();
+		File file = new File(filelist);
+		Scanner read;
+        try {
+                read = new Scanner(file);
+                do {
+                        String filename = read.next();
+                        toProcessFileNames.add(filename);
+
+                }while (read.hasNext());
+                read.close();
+        }catch(IOException e){
+                e.printStackTrace();
+        }
+        int progresscount=0;int filetot = toProcessFileNames.size();
+        
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         long startTime = System.currentTimeMillis();
         long previousTime = System.currentTimeMillis();
-		System.out.println(dateFormat.format(date1));
-		System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", args[0]));
-		File fileIn = new File(args[0]);
-        //File varTmpDir = new File(fileIn);
-        //if(!fileIn.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
-        System.out.println("READING NOW "+ fileIn);
-		HipoDataSource reader = new HipoDataSource();
-		reader.open(fileIn);
-		while (reader.hasEvent() && count < maxevents) {
-			DataEvent event = reader.getNextEvent();
-			ana.processEvent(event);
-			count++;
-			if(count%10000 == 0){
-                long nowTime = System.currentTimeMillis();
-                long elapsedTime = nowTime - previousTime;
-                long totalTime = nowTime - startTime;
-                elapsedTime = elapsedTime/1000;
-                totalTime = totalTime/1000;
-                Date date = new Date();
-                String TimeString = "          time : " + dateFormat.format(date) + " , last elapsed : " + elapsedTime + "s ; total elapsed : " + totalTime + "s";
-                System.out.println(TimeString);		
-                previousTime = nowTime;
-			}
-		}
+        System.out.println(dateFormat.format(date1));
+        
+        for (String runstrg : toProcessFileNames) if(count < maxevents){
+        	progresscount++;
+            System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", runstrg));
+            //File varTmpDir = new File(runstrg);
+            //if(!varTmpDir.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
+            System.out.println("READING NOW "+ runstrg);
+            HipoDataSource reader = new HipoDataSource();
+            reader.open(runstrg);
+            int filecount = 0;
+            while(reader.hasEvent() && count<maxevents) {
+            	DataEvent event = reader.getNextEvent();
+                ana.processEvent(event);
+                filecount++;count++;
+                if(count%100000 == 0){
+                	long nowTime = System.currentTimeMillis();
+                    long elapsedTime = nowTime - previousTime;
+                    long totalTime = nowTime - startTime;
+                    elapsedTime = elapsedTime/1000;
+                    totalTime = totalTime/1000;
+                    Date date = new Date();
+                    String TimeString = "          time : " + dateFormat.format(date) + " , last elapsed : " + elapsedTime + "s ; total elapsed : " + totalTime + "s";
+                    String diagnost = String.format(" file %d/%d", progresscount, filetot);
+                    System.out.println(diagnost + TimeString); 
+                    previousTime = nowTime;
+                    
+                }
+            	
+            	
+            }
+            
+            reader.close();
+        }
+        
+        
+		
+//		  File fileIn = new File(args[0]); 
+//		  //File varTmpDir = new File(fileIn);
+//		  //if(!fileIn.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
+//		  System.out.println("READING NOW "+ fileIn); 
+//		  HipoDataSource reader = new HipoDataSource(); 
+//		  reader.open(fileIn); 
+//		  while (reader.hasEvent() && count < maxevents) { 
+//			  DataEvent event = reader.getNextEvent();
+//			  ana.processEvent(event); 
+//			  count++; 
+//			  if(count%100000 == 0){ 
+//				  long nowTime = System.currentTimeMillis(); 
+//				  long elapsedTime = nowTime - previousTime; 
+//				  long totalTime = nowTime - startTime; 
+//				  elapsedTime = elapsedTime/1000; 
+//				  totalTime = totalTime/1000; 
+//				  Date date = new Date(); 
+//				  String TimeString = "          time : " + dateFormat.format(date) + " , last elapsed : " + elapsedTime + "s ; total elapsed : " + totalTime + "s";
+//				  System.out.println(TimeString); 
+//				  previousTime = nowTime; 
+//				  
+//				  } 
+//			  }
+		 
 		
 		System.out.println("Total events : " + count);
-		reader.close();
 		ana.analyze();
 		ana.plot();
 		ana.write();
