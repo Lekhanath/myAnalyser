@@ -7,6 +7,7 @@ import org.jlab.jnp.physics.*;
 
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.pdg.PDGDatabase;
+import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.clas.physics.LorentzVector;
 import org.jlab.clas.physics.Particle;
@@ -35,7 +36,9 @@ public class ft_ana {
 	//public float EB, Eb, Mp;
 	public float STT, RFT, FTSTT;
 	
-	//public List<LorentzVector> kps; // = new ArrayList<LorentzVector>();
+	public List<LorentzVector> kps; // = new ArrayList<LorentzVector>();
+	
+	
 	public LorentzVector VB, VT, Ve, VGS, Vprot, Vpip, Vpim, Vpim_correct, Vkp, Vkp_correct, Vkm;
 	public boolean found_eFT;
 	public int e_ft_part_ind;
@@ -58,18 +61,24 @@ public class ft_ana {
 	public int km_part_ind, km_FTOF_pad1b;
 	public float km_mom, km_the, km_phi, km_px, km_py, km_pz, km_vx, km_vy, km_vz, km_ftb_beta, km_FTOF1b_t, km_FTOF1b_path, km_FTOF1b_vt;
 	
-	public float ekpprot_MM, ekpprot_MM_ekp, ekp_MM;
-	public float protpim_IM, protrecpim_IM;
+	public float ekpprot_MM, ekpprot_MM_ekp, ekp_MM, ekpkp_MM;
+	public float protmissingpim_IM, protrecpim_IM;
 	public F1D F_prot_beta_mom, F_kp_beta_mom, F_pip_beta_mom;
 	
 	public DataLine L_lamda, L_sigma;
 	
 	public H1F H_FT_W;
-	public H1F H_ekp_MM;
-	public H1F H_protpim_IM;
+	public H1F H_ekp_MM, H_ekpkp_MM;
+	public H1F H_protmissingpim_IM;
 	public H1F H_protrecpim_IM;
 	public H1F H_ekpprot_MM2;
 	public F1D F_ekpport_MM2;
+	
+	// particles vz, path_FTOF1b, time_FTOF1b
+	
+	public H1F H_kp_vz, H_km_vz, H_prot_vz, H_pip_vz, H_pim_vz;
+	public H1F H_prot_FTOF1b_path, H_pip_FTOF1b_path,  H_pim_FTOF1b_path, H_kp_FTOF1b_path, H_km_FTOF1b_path;
+	public H1F H_prot_FTOF1b_t, H_pip_FTOF1b_t,  H_pim_FTOF1b_t, H_kp_FTOF1b_t, H_km_FTOF1b_t;
 	
 	public H2F H_FT_e_beta_mom;
 	public H2F H_FT_e_t_f, H_FT_e_p_f, H_FT_e_p_the;
@@ -117,7 +126,7 @@ public class ft_ana {
 		L_sigma = new DataLine();
 		L_sigma.setOrigin(1.18937, 0);
 		L_sigma.setEnd(1.18937, 700);
-		L_sigma.setLineColor(2);
+		L_sigma.setLineColor(3);
 		// FT electron overview
 		H_FT_e_t_f = new H2F("H_FT_e_t_f", "H_FT_e_t_f", 100, -180, 180, 50, 0, 8);
 		H_FT_e_t_f.setTitle("electron #theta vs #phi");
@@ -190,34 +199,60 @@ public class ft_ana {
 		H_ekp_MM.setTitleX("MM(ekp) (GeV)");
 		H_ekp_MM.setTitleY("count");
 		
-		H_protpim_IM = new H1F("H_protpim_IM", "H_protpim_IM", 150, 0.95, 2.0);
-		H_protpim_IM.setTitle("Invarient Mass");
-		H_protpim_IM.setTitleX("M(protpim) (GeV)");
-		H_protpim_IM.setTitleY("count");
+		H_ekpkp_MM = new H1F("H_ekpkp_MM", "H_ekpkp_MM", 150, 0.95, 2.0);
+		H_ekpkp_MM.setTitle("Missing Mass");
+		H_ekpkp_MM.setTitleX("MM(ekpkp) (GeV)");
+		H_ekpkp_MM.setTitleY("count");
+		
+		H_protmissingpim_IM = new H1F("H_protmissingpim_IM", "H_protmissingpim_IM", 100, 0.95, 1.4);
+		H_protmissingpim_IM.setTitle("IM considering missing particle as pim");
+		H_protmissingpim_IM.setTitleX("M(protpim) (GeV)");
+		H_protmissingpim_IM.setTitleY("count");
 		
 		H_protrecpim_IM = new H1F("H_protrecpim_IM", "H_protrecpim_IM", 150, 0.95, 1.35);
-		H_protrecpim_IM.setTitle("Invarient Mass with reconstructed pim");
+		H_protrecpim_IM.setTitle("IM with reconstructing missing pim using nominal mass");
 		H_protrecpim_IM.setTitleX("M(protrecpim) (GeV)");
 		H_protrecpim_IM.setTitleY("count");
 		
+		//particle vertex
+		H_pim_vz = new H1F("H_pim_vz", "H_pim_vz", 100, -20, 20);
+		H_pip_vz = new H1F("H_pip_vz", "H_pip_vz", 100, -20, 20);
+		H_kp_vz = new H1F("H_kp_vz", "H_kp_vz", 100, -20, 20);
+		H_km_vz = new H1F("H_km_vz", "H_km_vz", 100, -20, 20);
+		H_prot_vz = new H1F("H_prot_vz", "H_prot_vz", 100, -20, 20);
+		
+		//particle path
+		H_prot_FTOF1b_path = new H1F("H_prot_FTOF1b_path", "H_prot_FTOF1b_path", 200, 400, 900);
+		H_pip_FTOF1b_path = new H1F("H_pip_FTOF1b_path", "H_pip_FTOF1b_path", 200, 400, 900);
+		H_pim_FTOF1b_path = new H1F("H_pim_FTOF1b_path", "H_pim_FTOF1b_path", 200, 400, 900);
+		H_kp_FTOF1b_path = new H1F("H_kp_FTOF1b_path", "H_kp_FTOF1b_path", 200, 400, 900);
+		H_km_FTOF1b_path = new H1F("H_km_FTOF1b_path", "H_km_FTOF1b_path", 200, 400, 900);
+		
+		//particle time
+		H_prot_FTOF1b_t = new H1F("H_prot_FTOF1b_t", "H_prot_FTOF1b_t", 200, 10, 150);
+		H_pip_FTOF1b_t = new H1F("H_pip_FTOF1b_t", "H_pip_FTOF1b_t", 200, 10, 150);
+		H_pim_FTOF1b_t = new H1F("H_pim_FTOF1b_t", "H_pim_FTOF1b_t", 200, 10, 150);
+		H_kp_FTOF1b_t = new H1F("H_kp_FTOF1b_t", "H_kp_FTOF1b_t", 200, 10, 150);
+		H_km_FTOF1b_t = new H1F("H_km_FTOF1b_t", "H_km_FTOF1b_t", 200, 10, 150);
+		
 		// particles vetrex time vs momentum
-		H_pip_vt_p = new H2F("H_pip_vt_p","H_pip_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_pip_vt_p = new H2F("H_pip_vt_p","H_pip_vt_p", 100, -0.5, 0.5, 100, 0, 10.6);
 		H_pip_vt_p.setTitle("pip vt vs mom");
 		H_pip_vt_p.setTitleX("vt (ns)");
 		H_pip_vt_p.setTitleY("p (GeV)");
-		H_pim_vt_p = new H2F("H_pim_vt_p","H_pim_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_pim_vt_p = new H2F("H_pim_vt_p","H_pim_vt_p", 100, -0.5, 0.5, 100, 0, 10.6);
 		H_pim_vt_p.setTitle("pim vt vs mom");
 		H_pim_vt_p.setTitleX("vt (ns)");
 		H_pim_vt_p.setTitleY("p (GeV)");
-		H_kp_vt_p = new H2F("H_kp_vt_p","H_kp_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_kp_vt_p = new H2F("H_kp_vt_p","H_kp_vt_p", 100, -0.5, 0.5, 100, 0, 10.6);
 		H_kp_vt_p.setTitle("kp vt vs mom");
 		H_kp_vt_p.setTitleX("vt (ns)");
 		H_kp_vt_p.setTitleY("p (GeV)");
-		H_km_vt_p = new H2F("H_km_vt_p","H_km_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_km_vt_p = new H2F("H_km_vt_p","H_km_vt_p", 100, -0.5, 0.5, 100, 0, 10.6);
 		H_km_vt_p.setTitle("km vt vs mom");
 		H_km_vt_p.setTitleX("vt (ns)");
 		H_km_vt_p.setTitleY("p (GeV)");
-		H_prot_vt_p = new H2F("H_prot_vt_p","H_prot_vt_p", 100, -4, 4, 100, 0, 10.6);
+		H_prot_vt_p = new H2F("H_prot_vt_p","H_prot_vt_p", 100, -0.5, 0.5, 100, 0, 10.6);
 		H_prot_vt_p.setTitle("prot vt vs mom");
 		H_prot_vt_p.setTitleX("vt (ns)");
 		H_prot_vt_p.setTitleY("p (GeV)");
@@ -366,20 +401,23 @@ public class ft_ana {
 	
 
 	public void fillFTOF(DataBank part, DataBank bank) {
+		kps = new ArrayList<LorentzVector>();
 		for (int r = 0; r < bank.rows(); r++) {
-			if (bank.getByte("detector", r) == 12) {
-				
-				if (bank.getShort("pindex", r) == pip_part_ind && bank.getByte("layer", r) == 2) {
+			if (bank.getByte("detector", r) == 12) {	
+				if (bank.getShort("pindex", r) == pip_part_ind && bank.getByte("layer", r) == 2) {				
 					pip_FTOF_pad1b = bank.getShort("component", r);
 					pip_FTOF1b_t = bank.getFloat("time", r);
 					pip_FTOF1b_path = bank.getFloat("path", r);
-					float pip_beta = pip_mom / (float) Math.sqrt(pip_mom * pip_mom + 0.13957f * 0.13957f);
-					pip_FTOF1b_vt = pip_FTOF1b_t - pip_FTOF1b_path / (pip_beta * 29.98f) - STT - pip_vz/ (pip_beta * 29.98f);
-					if (Math.abs(pip_FTOF1b_vt) < 0.35) {
-						Vpip = new LorentzVector(pip_px, pip_py, pip_pz, Math.sqrt(pip_mom * pip_mom + 0.13957f * 0.13957f));
+					float pip_beta = pip_mom / (float) Math.sqrt(pip_mom * pip_mom + PDGDatabase.getParticleById(211).mass()*PDGDatabase.getParticleById(211).mass());
+					pip_FTOF1b_vt = pip_FTOF1b_t - pip_FTOF1b_path / (pip_ftb_beta * 29.98f) - STT - pip_vz/ (pip_ftb_beta * 29.98f);
+					if (Math.abs(pip_FTOF1b_vt) < 0.035) {
+						Vpip = new LorentzVector(pip_px, pip_py, pip_pz, Math.sqrt(pip_mom * pip_mom + PDGDatabase.getParticleById(211).mass()*PDGDatabase.getParticleById(211).mass()));		
 						//H_pip_vt_p.fill(pip_FTOF1b_vt, pip_mom);
 					}
 					H_pip_vt_p.fill(pip_FTOF1b_vt, pip_mom);
+					H_pip_vz.fill(pip_vz);
+					H_pip_FTOF1b_t.fill(pip_FTOF1b_t);
+					H_pip_FTOF1b_path.fill(pip_FTOF1b_path);
 				} // pip from FTOF panal 1b
 				
 				if (bank.getShort("pindex", r) == pim_part_ind && bank.getByte("layer", r) == 2) {
@@ -387,12 +425,15 @@ public class ft_ana {
 					pim_FTOF1b_t = bank.getFloat("time", r);
 					pim_FTOF1b_path = bank.getFloat("path", r);
 					float pim_beta = pim_mom / (float) Math.sqrt(pim_mom * pim_mom + 0.13957f * 0.13957f);
-					pim_FTOF1b_vt = pim_FTOF1b_t - pim_FTOF1b_path / (pim_beta * 29.98f) - STT - pim_vz/ (pim_beta * 29.98f);
-					if (Math.abs(pim_FTOF1b_vt) < 0.35) {
-						Vpim = new LorentzVector(pim_px, pim_py, pim_pz, Math.sqrt(pim_mom * pim_mom + 0.13957f * 0.13957f));
+					pim_FTOF1b_vt = pim_FTOF1b_t - pim_FTOF1b_path / (pim_ftb_beta * 29.98f) - STT - pim_vz/ (pim_ftb_beta * 29.98f);
+					if (Math.abs(pim_FTOF1b_vt) < 0.035) {
+						Vpim = new LorentzVector(pim_px, pim_py, pim_pz, Math.sqrt(pim_mom * pim_mom + PDGDatabase.getParticleById(-211).mass()*PDGDatabase.getParticleById(-211).mass()));
 						//H_pim_vt_p.fill(pim_FTOF1b_vt, pim_mom);
 					}
 					H_pim_vt_p.fill(pim_FTOF1b_vt, pim_mom);
+					H_pim_vz.fill(pim_vz);
+					H_pim_FTOF1b_t.fill(pim_FTOF1b_t);
+					H_pim_FTOF1b_path.fill(pim_FTOF1b_path);
 				} // pim from FTOF panal 1b
 				
 				if (bank.getShort("pindex", r) == kp_part_ind && bank.getByte("layer", r) == 2) {
@@ -400,13 +441,17 @@ public class ft_ana {
 					kp_FTOF1b_t = bank.getFloat("time", r);
 					kp_FTOF1b_path = bank.getFloat("path", r);
 					float kp_beta = kp_mom / (float) Math.sqrt(kp_mom * kp_mom + 0.49367f * 0.49367f);
-					kp_FTOF1b_vt = kp_FTOF1b_t - kp_FTOF1b_path / (kp_beta * 29.98f) - STT - kp_vz/ (kp_beta * 29.98f);
-					if (Math.abs(kp_vz) < 10 && Math.abs(kp_FTOF1b_vt) < 0.35) {
+					kp_FTOF1b_vt = kp_FTOF1b_t - kp_FTOF1b_path / (kp_ftb_beta * 29.98f) - STT - kp_vz/ (kp_ftb_beta * 29.98f);
+					if (kp_vz < 3 && kp_vz > -10 && Math.abs(kp_FTOF1b_vt) < 0.035 && kp_mom < 2.8 && kp_FTOF1b_path > 680 && kp_FTOF1b_path < 740) {
 						
-						Vkp = new LorentzVector(kp_px, kp_py, kp_pz, Math.sqrt(kp_mom * kp_mom + 0.49367f * 0.49367f));
+						Vkp = new LorentzVector(kp_px, kp_py, kp_pz, Math.sqrt(kp_mom * kp_mom + PDGDatabase.getParticleById(321).mass()*PDGDatabase.getParticleById(321).mass()));
+						kps.add(Vkp);
 						//H_kp_vt_p.fill(kp_FTOF1b_vt, kp_mom);
 					}
 					H_kp_vt_p.fill(kp_FTOF1b_vt, kp_mom);
+					H_kp_vz.fill(kp_vz);
+					H_kp_FTOF1b_t.fill(kp_FTOF1b_t);
+					H_kp_FTOF1b_path.fill(kp_FTOF1b_path);
 				} // kp from FTOF panal 1b
 				
 				if (bank.getShort("pindex", r) == km_part_ind && bank.getByte("layer", r) == 2) {
@@ -414,13 +459,16 @@ public class ft_ana {
 					km_FTOF1b_t = bank.getFloat("time", r);
 					km_FTOF1b_path = bank.getFloat("path", r);
 					float km_beta = km_mom / (float) Math.sqrt(km_mom * km_mom + 0.49367f * 0.49367f);
-					km_FTOF1b_vt = km_FTOF1b_t - km_FTOF1b_path / (km_beta * 29.98f) - STT - km_vz/ (km_beta * 29.98f);
-					if (Math.abs(km_FTOF1b_vt) < 0.35) {
+					km_FTOF1b_vt = km_FTOF1b_t - km_FTOF1b_path / (km_ftb_beta * 29.98f) - STT - km_vz/ (km_ftb_beta * 29.98f);
+					if (Math.abs(km_FTOF1b_vt) < 0.035) {
 						
-						Vkm = new LorentzVector(km_px, km_py, km_pz, Math.sqrt(km_mom * km_mom + 0.49367f * 0.49367f));
+						Vkm = new LorentzVector(km_px, km_py, km_pz, Math.sqrt(km_mom * km_mom + PDGDatabase.getParticleById(-321).mass()*PDGDatabase.getParticleById(-321).mass()));
 						//H_km_vt_p.fill(km_FTOF1b_vt, km_mom);
 					}
 					H_km_vt_p.fill(km_FTOF1b_vt, km_mom);
+					H_km_vz.fill(km_vz);
+					H_km_FTOF1b_t.fill(km_FTOF1b_t);
+					H_km_FTOF1b_path.fill(km_FTOF1b_path);
 				} // km from FTOF panal 1b
 				
 				
@@ -429,13 +477,16 @@ public class ft_ana {
 					prot_FTOF1b_t = bank.getFloat("time", r);
 					prot_FTOF1b_path = bank.getFloat("path", r);
 					float prot_beta = prot_mom / (float) Math.sqrt(prot_mom * prot_mom + 0.93827f * 0.93827f);
-					prot_FTOF1b_vt = prot_FTOF1b_t - prot_FTOF1b_path / (prot_beta * 29.98f) - STT - prot_vz/ (prot_beta * 29.98f);
-					if (Math.abs(prot_FTOF1b_vt) < 0.5) {
+					prot_FTOF1b_vt = prot_FTOF1b_t - prot_FTOF1b_path / (prot_ftb_beta * 29.98f) - STT - prot_vz/ (prot_ftb_beta * 29.98f);
+					if (Math.abs(prot_FTOF1b_vt) < 0.04) {
 						
-						Vprot = new LorentzVector(prot_px, prot_py, prot_pz, Math.sqrt(prot_mom * prot_mom + 0.93827f * 0.93827f));
+						Vprot = new LorentzVector(prot_px, prot_py, prot_pz, Math.sqrt(prot_mom * prot_mom + PDGDatabase.getParticleById(2212).mass()*PDGDatabase.getParticleById(2212).mass()));
 						//H_prot_vt_p.fill(prot_FTOF1b_vt, prot_mom);
 					}
 					H_prot_vt_p.fill(prot_FTOF1b_vt, prot_mom);
+					H_prot_vz.fill(prot_vz);
+					H_prot_FTOF1b_t.fill(prot_FTOF1b_t);
+					H_prot_FTOF1b_path.fill(prot_FTOF1b_path);
 				} // prot from FTOF panal 1b 
 				
 				
@@ -521,11 +572,11 @@ public class ft_ana {
 	}
 	
 	public void makeOthers(DataBank recbank,  DataBank recFTbank) {
-		List<LorentzVector> pips = new ArrayList<LorentzVector>();
-		List<LorentzVector> pims = new ArrayList<LorentzVector>();
-		List<LorentzVector> prots = new ArrayList<LorentzVector>();
-		List<LorentzVector> kps = new ArrayList<LorentzVector>();
-		List<LorentzVector> kms = new ArrayList<LorentzVector>();
+//		List<LorentzVector> pips = new ArrayList<LorentzVector>();
+//		List<LorentzVector> pims = new ArrayList<LorentzVector>();
+//		List<LorentzVector> prots = new ArrayList<LorentzVector>();
+//		List<LorentzVector> kps = new ArrayList<LorentzVector>();
+//		List<LorentzVector> kms = new ArrayList<LorentzVector>();
 		for (int k = 0; k < recbank.rows(); k++) {
 			byte q = recbank.getByte("charge", k);
 			int pid = recbank.getInt("pid", k);
@@ -546,9 +597,9 @@ public class ft_ana {
 			float the = (float) Math.toDegrees(Math.acos(pz / mom));
 			float phi = (float) Math.toDegrees(Math.atan2(py, px));
 			double FTBmass = mom * mom * (1 / ( ftbbe * ftbbe ) - 1);
-			boolean kpMass2Cut = (0.180625 < FTBmass && FTBmass < 0.36);// 0.425 < kpM < 0.6
+			boolean kpMass2Cut = (0.15 < FTBmass && FTBmass < 0.30);
+			//boolean kpMass2Cut = (0.180625 < FTBmass && FTBmass < 0.36);// 0.425 < kpM < 0.6
 			boolean chi2pidCut = (Math.abs(chi2pid) < 5.0);
-			
 			if (ftbpid == 211 && pip_part_ind == -1 && inDC && chi2pidCut) {
 				pip_part_ind = k;
 				pip_mom = mom;
@@ -664,40 +715,55 @@ public class ft_ana {
 	
 	} //MAKEOTHER
 	
-	
-	public boolean select_ekpprot(){
+	public boolean select_ekpkpX() {
 		boolean res = false;
-		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT){
-			//epip_dPhi = pip_phi - e_phi + 180f;
-			//while(epip_dPhi> 180f)epip_dPhi -= 360f;
-			//while(epip_dPhi<-180f)epip_dPhi += 360f;
-			LorentzVector VmissPIM = new LorentzVector(0,0,0,0);
-			LorentzVector Vmissekp = new LorentzVector(0,0,0,0);
-			VmissPIM.add(VT);VmissPIM.add(VB);VmissPIM.sub(Ve);VmissPIM.sub(Vkp);VmissPIM.sub(Vprot);
-			Vmissekp.add(VT);Vmissekp.add(VB);Vmissekp.sub(Ve);Vmissekp.sub(Vkp);
-			ekpprot_MM = (float)VmissPIM.mass2();
-			ekpprot_MM_ekp = (float)Vmissekp.mass();
+		if( found_eFT && kps.size() == 2) {
+			LorentzVector Vmissekpkp = new LorentzVector(0, 0, 0, 0);
+			Vmissekpkp.add(VT);Vmissekpkp.add(VB);Vmissekpkp.sub(Ve);Vmissekpkp.sub(kps.get(0));Vmissekpkp.sub(kps.get(1));
+			ekpkp_MM = (float)Vmissekpkp.mass();
 			res = true;
 		}
 		return res;
+		
 	}
 	
-	public boolean select_ekp(){
+	
+	public boolean select_ekpprot(){
 		boolean res = false;
-		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT){
-			LorentzVector VmissLamda = new LorentzVector(0,0,0,0);
-			VmissLamda.add(VT);
-			VmissLamda.add(VB);
-			VmissLamda.sub(Ve);
-			VmissLamda.sub(Vkp);
-			
-			if (ekpprot_MM < 0.12 && ekpprot_MM > -0.06) {		
-				ekp_MM = (float)VmissLamda.mass();	
+		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.035 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.04 && found_eFT && kp_mom < 2.8){
+			//epip_dPhi = pip_phi - e_phi + 180f;
+			//while(epip_dPhi> 180f)epip_dPhi -= 360f;
+			//while(epip_dPhi<-180f)epip_dPhi += 360f;
+			LorentzVector Vmissekpprot = new LorentzVector(0,0,0,0);
+			LorentzVector Vmissekp = new LorentzVector(0,0,0,0);
+			Vmissekpprot.add(VT);Vmissekpprot.add(VB);Vmissekpprot.sub(Ve);Vmissekpprot.sub(Vkp);Vmissekpprot.sub(Vprot);
+			Vmissekp.add(VT);Vmissekp.add(VB);Vmissekp.sub(Ve);Vmissekp.sub(Vkp);
+			ekpprot_MM = (float)Vmissekpprot.mass2();
+			ekpprot_MM_ekp = (float)Vmissekp.mass();
+			if (ekpprot_MM < 0.10 && ekpprot_MM > -0.06) {		
+				ekp_MM = (float)Vmissekp.mass();	
 			}
 			res = true;
 		}
 		return res;
 	}
+	
+//	public boolean select_ekp(){
+//		boolean res = false;
+//		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT){
+//			LorentzVector VmissLamda = new LorentzVector(0,0,0,0);
+//			VmissLamda.add(VT);
+//			VmissLamda.add(VB);
+//			VmissLamda.sub(Ve);
+//			VmissLamda.sub(Vkp);
+//			
+//			if (ekpprot_MM < 0.12 && ekpprot_MM > -0.06) {		
+//				ekp_MM = (float)VmissLamda.mass();	
+//			}
+//			res = true;
+//		}
+//		return res;
+//	}
 
 	// invariant mass of corrected electron and reconstructed pim from MM(ekpprot) technique
 	
@@ -718,13 +784,21 @@ public class ft_ana {
 	
 	public boolean select_protpim() {
 		boolean res = false;
-		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.35 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.5 && found_eFT && Math.abs(ekpprot_MM - 0.01947978) < 0.05) {
-			LorentzVector V_recpim = new LorentzVector(0,0,0,0);
+		if(kp_part_ind > -1 && Math.abs(kp_FTOF1b_vt) < 0.035 && prot_part_ind > -1 && Math.abs(prot_FTOF1b_vt) < 0.04 && found_eFT && Math.abs(ekpprot_MM - 0.01947978) < 0.05 && kp_mom < 2.8) {
+			LorentzVector V_missingpim = new LorentzVector(0,0,0,0);
 			LorentzVector V_IM_protrecpim = new LorentzVector(0,0,0,0);
-			V_recpim.add(VT);V_recpim.add(VB);V_recpim.sub(Ve);V_recpim.sub(Vkp);V_recpim.sub(Vprot);
-			V_IM_protrecpim.add(V_recpim);
+			LorentzVector V_IM_protmissingpim = new LorentzVector(0,0,0,0);
+			V_missingpim.add(VT);V_missingpim.add(VB);V_missingpim.sub(Ve);V_missingpim.sub(Vkp);V_missingpim.sub(Vprot);
+			float recpim_mom = (float) Math.sqrt(V_missingpim.px() * V_missingpim.px() + V_missingpim.py() * V_missingpim.py() + V_missingpim.pz() * V_missingpim.pz());
+			LorentzVector V_newrecpim_usingnominalmass = new LorentzVector(V_missingpim.px(), V_missingpim.py(), V_missingpim.pz(), Math.sqrt(recpim_mom * recpim_mom + 0.13957f * 0.13957f));
+			//V_IM_protrecpim.add(V_recpim);
+			V_IM_protrecpim.add(V_newrecpim_usingnominalmass);
 			V_IM_protrecpim.add(Vprot);
-			protpim_IM = (float)V_IM_protrecpim.mass();
+			protrecpim_IM = (float)V_IM_protrecpim.mass();
+			V_IM_protmissingpim.add(V_missingpim);
+			V_IM_protmissingpim.add(Vprot);
+			protmissingpim_IM = (float)V_IM_protmissingpim.mass();
+			
 			res = true;
 		}
 		
@@ -753,14 +827,10 @@ public class ft_ana {
 		kp_FTOF_pad1b = -1;
 		km_FTOF_pad1b = -1;
 		found_eFT = false;
-		//kps = null;
+		kps = null;
 			
 	}
-	
-	
 
-		
-	
 	public void processEvent(DataEvent event) {
 		resetCounters();
 		if (event.hasBank("RECFT::Event"))
@@ -810,20 +880,17 @@ public class ft_ana {
 			H_ekpprot_W_e_mom.fill(ekpprot_MM, e_mom);
 			H_ekpprot_MMekp_MM2.fill(ekpprot_MM_ekp, ekpprot_MM);
 			H_ekpprot_MM2.fill(ekpprot_MM);
-			
+			H_ekp_MM.fill(ekp_MM);	
 		}
 		
-		if (select_ekp()) {
-			H_ekp_MM.fill(ekp_MM);
+		if(select_ekpkpX()) {
+			System.out.println(" kps.size() &&....... :)" + kps.size());
+			H_ekpkp_MM.fill(ekpkp_MM);
 		}
-		
-//		if (select_protrecpim()) {
-//			H_protrecpim_IM.fill(protrecpim_IM);
-//		}
-//		
 		
 		if (select_protpim()) {
-			H_protpim_IM.fill(protpim_IM);
+			H_protrecpim_IM.fill(protrecpim_IM);
+			H_protmissingpim_IM.fill(protmissingpim_IM);
 		}
 	}
 	
@@ -851,11 +918,74 @@ public class ft_ana {
 		can_e_overview.getPad(4).getAxisZ().setLog(true);
 		can_e_overview.draw(H_FT_e_xB_Q2);
 		can_e_overview.cd(5);
-		can_e_overview.cd(5).save("/home/akhanal/eclipse-workspace/myAnalyser/plots/e_overview.png");
 		can_e_overview.draw(H_FT_W);
 		can_e_overview.getPad(5).getAxisZ().setRange(5, 25);
 		can_e_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FT_e_overview.png"));
 		System.out.println("saved plots dst_FT_e_overview.png");
+		
+		// particle vertex
+		
+		EmbeddedCanvas can_vz_overview = new EmbeddedCanvas();
+		can_vz_overview.setSize(1800, 1200);
+		can_vz_overview.divide(3, 2);
+		can_vz_overview.setAxisTitleSize(18);
+		can_vz_overview.setAxisFontSize(18);
+		can_vz_overview.setTitleSize(18);
+		can_vz_overview.cd(0);
+		can_vz_overview.draw(H_pip_vz);
+		can_vz_overview.cd(1);
+		can_vz_overview.draw(H_pim_vz);
+		can_vz_overview.cd(2);
+		can_vz_overview.draw(H_prot_vz);
+		can_vz_overview.cd(3);
+		can_vz_overview.draw(H_kp_vz);
+		can_vz_overview.cd(4);
+		can_vz_overview.draw(H_km_vz);
+		can_vz_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_vz_overview.png"));
+		System.out.println("saved plots dst_vz_overview.png");
+		
+		// particle FTOF1b time
+		EmbeddedCanvas can_FTOF1b_t_overview = new EmbeddedCanvas();
+		can_FTOF1b_t_overview.setSize(1800, 1200);
+		can_FTOF1b_t_overview.divide(3, 2);
+		can_FTOF1b_t_overview.setAxisTitleSize(18);
+		can_FTOF1b_t_overview.setAxisFontSize(18);
+		can_FTOF1b_t_overview.setTitleSize(18);
+		can_FTOF1b_t_overview.cd(0);
+		can_FTOF1b_t_overview.draw(H_prot_FTOF1b_t);
+		can_FTOF1b_t_overview.cd(1);
+		can_FTOF1b_t_overview.draw(H_pip_FTOF1b_t);
+		can_FTOF1b_t_overview.cd(2);
+		can_FTOF1b_t_overview.draw(H_pim_FTOF1b_t);
+		can_FTOF1b_t_overview.cd(3);
+		can_FTOF1b_t_overview.draw(H_kp_FTOF1b_t);
+		can_FTOF1b_t_overview.cd(4);
+		can_FTOF1b_t_overview.draw(H_km_FTOF1b_t);
+		can_FTOF1b_t_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FTOF1b_t_overview.png"));
+		System.out.println("saved plots dst_FTOF1b_t_overview.png");
+		
+		// particle FTOF1b path
+		
+		EmbeddedCanvas can_FTOF1b_path_overview = new EmbeddedCanvas();
+		can_FTOF1b_path_overview.setSize(1800, 1200);
+		can_FTOF1b_path_overview.divide(3, 2);
+		can_FTOF1b_path_overview.setAxisTitleSize(18);
+		can_FTOF1b_path_overview.setAxisFontSize(18);
+		can_FTOF1b_path_overview.setTitleSize(18);
+		can_FTOF1b_path_overview.cd(0);
+		can_FTOF1b_path_overview.draw(H_prot_FTOF1b_path);
+		can_FTOF1b_path_overview.cd(1);
+		can_FTOF1b_path_overview.draw(H_pip_FTOF1b_path);
+		can_FTOF1b_path_overview.cd(2);
+		can_FTOF1b_path_overview.draw(H_pim_FTOF1b_path);
+		can_FTOF1b_path_overview.cd(3);
+		can_FTOF1b_path_overview.draw(H_kp_FTOF1b_path);
+		can_FTOF1b_path_overview.cd(4);
+		can_FTOF1b_path_overview.draw(H_km_FTOF1b_path);
+		can_FTOF1b_path_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FTOF1b_path_overview.png"));
+		System.out.println("saved plots dst_FTOF1b_path_overview.png");
+		
+		
 		
 		// ekpprot_MM overview  
 		EmbeddedCanvas can_ekp_MM_overview = new EmbeddedCanvas();
@@ -887,14 +1017,25 @@ public class ft_ana {
 		DataLine Lcut = new DataLine();Lcut.setOrigin(-0.04, 0);Lcut.setEnd(-0.04, 200);Lcut.setLineColor(2);
 		DataLine Ucut = new DataLine();Ucut.setOrigin(0.06, 0);Ucut.setEnd(0.06, 200);Ucut.setLineColor(2);
 		can_ekp_MM_overview.cd(6);can_ekp_MM_overview.draw(H_ekpprot_MM2);can_ekp_MM_overview.draw(F_ekpport_MM2, "same");can_ekp_MM_overview.draw(Lcut);can_ekp_MM_overview.draw(Ucut);
-		can_ekp_MM_overview.cd(7);can_ekp_MM_overview.draw(H_protpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
-		//can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
+		can_ekp_MM_overview.cd(7);can_ekp_MM_overview.draw(H_protmissingpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
+		can_ekp_MM_overview.cd(8);can_ekp_MM_overview.draw(H_protrecpim_IM);can_ekp_MM_overview.draw(L_lamda);can_ekp_MM_overview.draw(L_sigma);
 		//can_ekp_MM_overview.cd(5); can_ekp_MM_overview.getPad(5).getAxisZ().setLog(true);
 		//can_ekp_MM_overview.draw(H_prot_vt_p);
 		can_ekp_MM_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_ekpprot_W_overview.png"));
 		System.out.println("saved plots dst_ekpprot_W_overview.png");
 		
-		
+		// ekpkp_MM overview		
+		EmbeddedCanvas can_ekpkp_MM_overview = new EmbeddedCanvas();
+		can_ekpkp_MM_overview.setSize(1800, 1200);
+		can_ekpkp_MM_overview.divide(2, 2);
+		can_ekpkp_MM_overview.setAxisTitleSize(18);
+		can_ekpkp_MM_overview.setAxisFontSize(18);
+		can_ekpkp_MM_overview.setTitleSize(18);
+		can_ekpkp_MM_overview.cd(0);
+		can_ekpkp_MM_overview.draw(H_ekpkp_MM);
+		can_ekpkp_MM_overview.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_ekpkp_overview.png"));
+		System.out.println("saved plots dst_ekpkp_MM_overview.png");
+			
 		EmbeddedCanvas can_mass_overview = new EmbeddedCanvas();
 		can_mass_overview.setSize(1800, 1200);
 		can_mass_overview.divide(3, 2);
@@ -903,7 +1044,9 @@ public class ft_ana {
 		can_mass_overview.setTitleSize(18);
 		can_mass_overview.cd(0);
 		can_mass_overview.getPad(0).getAxisZ().setLog(true);
-		can_mass_overview.draw(H_FD_pos_mass_mom);
+		DataLine LcutKpmass2 = new DataLine();LcutKpmass2.setOrigin(0, 0.15);LcutKpmass2.setEnd(7, 0.15);LcutKpmass2.setLineColor(2);
+		DataLine UcutKpmass2 = new DataLine();UcutKpmass2.setOrigin(0, 0.30);UcutKpmass2.setEnd(7, 0.30);UcutKpmass2.setLineColor(2);
+		can_mass_overview.draw(H_FD_pos_mass_mom);can_mass_overview.draw(LcutKpmass2);can_mass_overview.draw(UcutKpmass2);
 		can_mass_overview.cd(1);
 		can_mass_overview.getPad(1).getAxisZ().setLog(true);
 		can_mass_overview.draw(H_FD_neg_mass_mom);
@@ -1040,7 +1183,7 @@ public class ft_ana {
 			}
 		
 			can_e_FTOF1A_mass.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FTOF1A_mass.png"));
-			System.out.println(String.format("saved plots/dst_FTOF1A_mass.png"));
+			System.out.println(String.format("saved plots dst_FTOF1A_mass.png"));
 			
 			EmbeddedCanvas can_e_FTOF1B_mass = new EmbeddedCanvas();
 			can_e_FTOF1B_mass.setSize(3600, 4800);
@@ -1074,7 +1217,7 @@ public class ft_ana {
 			}
 			
 			can_e_FTOF1B_mass.save(String.format("/home/akhanal/eclipse-workspace/myAnalyser/plots/dst_FTOF1B_mass.png"));
-			System.out.println(String.format("saved plots/dst_FTOF1B_mass.png"));
+			System.out.println(String.format("saved plots dst_FTOF1B_mass.png"));
 				
 	}
 	
@@ -1097,13 +1240,12 @@ public class ft_ana {
 		System.setProperty("java.awt.headless", "true");
 		GStyle.setPalette("kRainBow");
 		int count = 0;
-		int maxevents = 5000000;
+		int maxevents = 1000000000;
 		ft_ana ana = new ft_ana();
 		// "/home/akhanal/work/ExPhy/data/rg-a/trains/v16_v2/skim3_5038.hipo"  10.6 GeV run
 		// "/home/akhanal/work/ExPhy/data/rg-k/trains/pass1/v0_2/skim3_5700.hipo" 7.5 GeV run
 		//File fileIn = new File(args[0]); 
-		Date date1 = new Date();
-		System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", args[0]));
+		System.out.println(String.format(">>> ft_ana %s >>>", args[0]));
 		String filelist = "list_of_files.txt";
 		filelist = args[0];
 		List<String> toProcessFileNames = new ArrayList<String>();
@@ -1120,23 +1262,21 @@ public class ft_ana {
         }catch(IOException e){
                 e.printStackTrace();
         }
-        int progresscount=0;int filetot = toProcessFileNames.size();
-        
+        int progresscount=0;
+        int filetot = toProcessFileNames.size();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         long startTime = System.currentTimeMillis();
-        long previousTime = System.currentTimeMillis();
-        System.out.println(dateFormat.format(date1));
-        
+        long previousTime = System.currentTimeMillis(); 
         for (String runstrg : toProcessFileNames) if(count < maxevents){
         	progresscount++;
-            System.out.println(String.format(">>>>>>>>>>>>>>>> ft_ana %s", runstrg));
-            //File varTmpDir = new File(runstrg);
-            //if(!varTmpDir.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
-            System.out.println("READING NOW "+ runstrg);
+            System.out.println(String.format(">>>> ft_ana %s >>>>", runstrg));
+            File varTmpDir = new File(runstrg);
+            if(!varTmpDir.exists()){System.out.println("FILE DOES NOT EXIST");continue;}
+            System.out.println("READING NOW " + runstrg);
             HipoDataSource reader = new HipoDataSource();
             reader.open(runstrg);
             int filecount = 0;
-            while(reader.hasEvent() && count<maxevents) {
+            while(reader.hasEvent() && count < maxevents) {
             	DataEvent event = reader.getNextEvent();
                 ana.processEvent(event);
                 filecount++;count++;
@@ -1152,11 +1292,9 @@ public class ft_ana {
                     System.out.println(diagnost + TimeString); 
                     previousTime = nowTime;
                     
-                }
+                }           	
             	
-            	
-            }
-            
+            }          
             reader.close();
         }
         
@@ -1185,8 +1323,7 @@ public class ft_ana {
 //				  
 //				  } 
 //			  }
-		 
-		
+		 		
 		System.out.println("Total events : " + count);
 		ana.analyze();
 		ana.plot();
